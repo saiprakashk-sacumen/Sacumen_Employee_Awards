@@ -1,0 +1,15 @@
+fastapi
+uvicorn[standard]
+SQLAlchemy
+alembic
+psycopg2-binary
+python-jose[cryptography]   # or PyJWT
+passlib[bcrypt]
+pydantic
+prometheus-client
+celery[redis]
+redis
+nltk
+vaderSentiment
+python-dotenv
+pydantic-settings

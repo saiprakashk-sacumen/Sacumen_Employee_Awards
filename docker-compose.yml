@@ -1,0 +1,55 @@
+version: "3.8"
+services:
+  api:
+    build: .
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - ./:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+psycopg2://postgres:postgres@db:5432/awards
+      - JWT_SECRET=devsecret
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+
+  worker:
+    build: .
+    command: celery -A app.tasks.celery worker -l info
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - DATABASE_URL=postgresql+psycopg2://postgres:postgres@db:5432/awards
+    depends_on:
+      - redis
+      - db
+
+  db:
+    image: postgres:14
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: awards
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
+  # optional prometheus for scrapes
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9091:9090"
+    depends_on:
+      - api
+
+volumes:
+  pgdata:

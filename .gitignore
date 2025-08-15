@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.env
+*.sqlite3
+
+# Virtual environments
+venv/
+env/
+
+# Docker
+*.log
+*.pid
+*.sock
+
+# VSCode / IDE
+.vscode/
+.idea/
+
+# Database
+pgdata/
+
+# Celery
+celerybeat-schedule
+
+# Misc
+*.DS_Store
