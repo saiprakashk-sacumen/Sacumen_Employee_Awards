@@ -13,3 +13,9 @@ nltk
 vaderSentiment
 python-dotenv
 pydantic-settings
+transformers
+torch
+scikit-learn
+pandas
+numpy
+PyJWT

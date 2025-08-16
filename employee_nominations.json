@@ -1,0 +1,16 @@
+[
+  {
+    "nomination_id": 1,
+    "employee_id": 101,
+    "manager_id": 10,
+    "core_value_claimed": "Customer delight",
+    "comment": "She always goes above and beyond to satisfy the client."
+  },
+  {
+    "nomination_id": 2,
+    "employee_id": 102,
+    "manager_id": 10,
+    "core_value_claimed": "Innovation",
+    "comment": "Introduced a new way to automate our reports."
+  }
+]

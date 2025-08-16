@@ -8,7 +8,8 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql+psycopg2://postgres:postgres@db:5432/awards
+      - DATABASE_URL=postgresql+psycopg2://postgres:postgres@db/awards
+
       - JWT_SECRET=devsecret
       - REDIS_URL=redis://redis:6379/0
     depends_on:
@@ -20,7 +21,8 @@ services:
     command: celery -A app.tasks.celery worker -l info
     environment:
       - REDIS_URL=redis://redis:6379/0
-      - DATABASE_URL=postgresql+psycopg2://postgres:postgres@db:5432/awards
+      - DATABASE_URL=postgresql+psycopg2://postgres:postgres@db/awards
+
     depends_on:
       - redis
       - db
