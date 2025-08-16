@@ -1,7 +1,16 @@
+# app/db.py
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, scoped_session, declarative_base
-from .config import settings
+from sqlalchemy.orm import declarative_base, sessionmaker
+import os
 
-engine = create_engine(settings.DATABASE_URL, future=True, echo=False)
-SessionLocal = scoped_session(sessionmaker(bind=engine, autoflush=False, autocommit=False, future=True))
+# Read DB URL from environment
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+psycopg2://postgres:postgres@db/awards")
+
+# Create SQLAlchemy engine
+engine = create_engine(DATABASE_URL, echo=True)  # echo=True logs SQL queries
+
+# Create a configured "Session" class
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+# Base class for models
 Base = declarative_base()
