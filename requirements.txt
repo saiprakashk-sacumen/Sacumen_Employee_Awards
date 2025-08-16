@@ -18,4 +18,23 @@ torch
 scikit-learn
 pandas
 numpy
-PyJWT
+
+# === SLACK & JIRA INTEGRATION (Minimal additions) ===
+
+# Slack Integration
+slack-sdk>=3.26.0             # Official Slack SDK (flexible version)
+
+# Jira Integration  
+jira>=3.5.0                   # Official Jira Python library (flexible version)
+
+# HTTP Client (choose ONE of these options)
+httpx>=0.24.0,<0.25.0        # Async HTTP client (compatible version range)
+# OR use requests if you prefer sync:
+# requests>=2.31.0
+
+# Data Processing
+pandas>=2.1.0                 # For metrics analysis
+python-dateutil>=2.8.0       # Date utilities
+
+# Essential utilities only
+python-multipart              # For form data handling
