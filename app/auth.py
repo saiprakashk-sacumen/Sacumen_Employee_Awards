@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from sqlalchemy.orm import Session
 from app.db import SessionLocal
 from app.models import User
@@ -22,6 +22,20 @@ class AuthResponse(BaseModel):
     access_token: str
     token_type: str
     role: str
+
+# ---- Request Models ----
+class SignUpRequest(BaseModel):
+    name: str
+    email: EmailStr
+    password: str
+    role: str = "manager"   # default role can be manager (or "user")
+
+class SignUpResponse(BaseModel):
+    message: str
+    user_id: int
+    email: str
+    role: str
+
 
 def get_db():
     db = SessionLocal()
@@ -48,3 +62,38 @@ def signin(payload: AuthRequest, db: Session = Depends(get_db)):
     token_data = {"sub": user.email, "role": user.role}
     token = create_access_token(token_data)
     return {"access_token": token, "token_type": "bearer", "role": user.role}
+
+
+
+# ---- Password Utils ----
+def get_password_hash(password: str) -> str:
+    return pwd_context.hash(password)
+
+# ---- Signup Endpoint ----
+@router.post("/signup", response_model=SignUpResponse)
+def signup(payload: SignUpRequest, db: Session = Depends(get_db)):
+    # Check if user already exists
+    existing_user = db.query(User).filter(User.email == payload.email).first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="User already exists")
+
+    # Create new user
+    new_user = User(
+        name=payload.name,
+        email=payload.email,
+        password_hash=get_password_hash(payload.password),
+        role=payload.role,
+        is_approved=False  # manager onboarding pending until super admin approves
+        # created_at and updated_at will be auto-set
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    return {
+        "message": "User registered successfully. Awaiting approval.",
+        "user_id": new_user.id,
+        "email": new_user.email,
+        "role": new_user.role,
+        "created_at": new_user.created_at
+    }
