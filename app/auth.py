@@ -6,6 +6,7 @@ from app.models import User
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
 from jose import jwt
+from pydantic import BaseModel
 SECRET_KEY = "your-secret-key"  # store in env variable
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
@@ -69,8 +70,16 @@ def signin(payload: AuthRequest, db: Session = Depends(get_db)):
 def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
-# ---- Signup Endpoint ----
-@router.post("/signup", response_model=SignUpResponse)
+class SignUpAuthResponse(BaseModel):
+    message: str
+    user_id: int
+    email: str
+    role: str
+    access_token: str
+    token_type: str
+
+# ---- Updated signup endpoint ----
+@router.post("/signup", response_model=SignUpAuthResponse)
 def signup(payload: SignUpRequest, db: Session = Depends(get_db)):
     # Check if user already exists
     existing_user = db.query(User).filter(User.email == payload.email).first()
@@ -83,17 +92,21 @@ def signup(payload: SignUpRequest, db: Session = Depends(get_db)):
         email=payload.email,
         password_hash=get_password_hash(payload.password),
         role=payload.role,
-        is_approved=False  # manager onboarding pending until super admin approves
-        # created_at and updated_at will be auto-set
+        is_approved=False
     )
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
+
+    # Create JWT token
+    token_data = {"sub": new_user.email, "role": new_user.role}
+    token = create_access_token(token_data)
 
     return {
         "message": "User registered successfully. Awaiting approval.",
         "user_id": new_user.id,
         "email": new_user.email,
         "role": new_user.role,
-        "created_at": new_user.created_at
+        "access_token": token,
+        "token_type": "bearer"
     }

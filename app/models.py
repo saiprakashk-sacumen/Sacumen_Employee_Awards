@@ -11,20 +11,21 @@ class User(Base):
     name = Column(String, nullable=False)
     email = Column(String, unique=True, nullable=False, index=True)
     password_hash = Column(String, nullable=False)
-    role = Column(String, nullable=False)
-    is_approved = Column(Boolean, default=False, nullable=False)
-
+    role = Column(String, nullable=False)  # admin/manager/etc.
+    is_approved = Column(Boolean, default=False, nullable=False, server_default="false")
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
+
 class Employee(Base):
     __tablename__ = "employees"
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String(100))
-    email = Column(String(150))
-    project = Column(String(100))
-    manager_id = Column(Integer)
-    created_at = Column(TIMESTAMP, server_default=func.now())
+    id = Column(String(20), primary_key=True)  # employee_id from JSON
+    name = Column(String(100), nullable=False)
+    email = Column(String(150), nullable=False, unique=True)
+    project = Column(String(100), nullable=False)
+    manager_id = Column(Integer, ForeignKey("users.id"))  # FIXED
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
 
 class Nomination(Base):
     __tablename__ = "nominations"
@@ -34,27 +35,30 @@ class Nomination(Base):
     customer_email = Column(String(150))
     core_value = Column(String(50))
     rating = Column(Integer)
-    nominee_id = Column(Integer)
-    manager_id = Column(Integer)
-    created_at = Column(TIMESTAMP, server_default=func.now())
-    updated_at = Column(TIMESTAMP, onupdate=func.now())
+    nominee_id = Column(String(20), ForeignKey("employees.id"))  # FIXED
+    manager_id = Column(Integer, ForeignKey("users.id"))  # FIXED
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
 
 class SentimentResult(Base):
     __tablename__ = "sentiment_results"
-    nomination_id = Column(Integer, primary_key=True, autoincrement=True)
-    employee_id = Column(Integer)
-    manager_id = Column(Integer)
+    id = Column(Integer, primary_key=True, autoincrement=True)  # FIXED
+    nomination_id = Column(Integer, ForeignKey("nominations.id"))  # FIXED
+    employee_id = Column(String(20), ForeignKey("employees.id"))  # FIXED
+    manager_id = Column(Integer, ForeignKey("users.id"))  # FIXED
     sentiment_label = Column(String(20))
     sentiment_score = Column(Float)
     predicted_core_value = Column(String(50))
     core_value_alignment = Column(Integer)
-    analyzed_at = Column(TIMESTAMP)
+    analyzed_at = Column(DateTime(timezone=True), server_default=func.now())
+
 
 class PasswordReset(Base):
     __tablename__ = "password_resets"
     id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(Integer)
+    user_id = Column(Integer, ForeignKey("users.id"))  # FIXED
     reset_token = Column(String(256))
-    expires_at = Column(TIMESTAMP)
+    expires_at = Column(DateTime(timezone=True))
     used = Column(Boolean, default=False)
-    created_at = Column(TIMESTAMP, server_default=func.now())
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
