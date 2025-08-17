@@ -1,26 +1,25 @@
-# Use official Python base image
 FROM python:3.11-slim
 
-# Set work directory in container
 WORKDIR /app
 
-# Install system dependencies for psycopg2 & other libs
-RUN apt-get update \
-    && apt-get install -y build-essential libpq-dev gcc \
+# Install only runtime dependencies
+RUN apt-get update && apt-get install -y libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy dependency files first (for better build caching)
-COPY requirements.txt /app/
+# Upgrade pip first
+RUN pip install --upgrade pip
 
-# Install Python dependencies
+# Install PyTorch CPU wheel separately (before other requirements)
+RUN pip install torch==2.2.0+cpu --index-url https://download.pytorch.org/whl/cpu
+
+# Copy requirements and install the rest
+COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of your code
+# Copy the rest of the app
 COPY . /app
 
-# Environment variables
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 
-# Default command (overridden by docker-compose)
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
