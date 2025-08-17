@@ -78,8 +78,7 @@ class SignUpAuthResponse(BaseModel):
     access_token: str
     token_type: str
 
-# ---- Updated signup endpoint ----
-@router.post("/signup", response_model=SignUpAuthResponse)
+@router.post("/signup", response_model=SignUpResponse)
 def signup(payload: SignUpRequest, db: Session = Depends(get_db)):
     # Check if user already exists
     existing_user = db.query(User).filter(User.email == payload.email).first()
@@ -92,21 +91,17 @@ def signup(payload: SignUpRequest, db: Session = Depends(get_db)):
         email=payload.email,
         password_hash=get_password_hash(payload.password),
         role=payload.role,
-        is_approved=False
+        is_approved=False  # manager onboarding pending approval
     )
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
 
-    # Create JWT token
-    token_data = {"sub": new_user.email, "role": new_user.role}
-    token = create_access_token(token_data)
-
+    # Return basic info without token
     return {
         "message": "User registered successfully. Awaiting approval.",
         "user_id": new_user.id,
         "email": new_user.email,
         "role": new_user.role,
-        "access_token": token,
-        "token_type": "bearer"
+        "created_at": new_user.created_at
     }
