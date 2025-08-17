@@ -12,6 +12,18 @@ This is a FastAPI backend service for managing employee awards, with:
 ```bash
 docker-compose up --build
 
+## Recommended sequence for your case
+
+# 1. Stop any running containers
+docker compose down
+
+# 2. Rebuild Docker image from scratch (no GPU bloat)
+docker compose build --no-cache
+
+# 3. Start containers
+docker compose up
+
+
 
 ### Test the API
 Example `curl` commands for your endpoints:
