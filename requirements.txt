@@ -1,3 +1,4 @@
+numpy<2
 fastapi
 uvicorn[standard]
 SQLAlchemy
@@ -14,8 +15,11 @@ vaderSentiment
 python-dotenv
 pydantic-settings
 transformers
-torch
 scikit-learn
 pandas
-numpy
 PyJWT
+email-validator
+
+# PyTorch CPU build from PyTorch repo
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.2.0+cpu
