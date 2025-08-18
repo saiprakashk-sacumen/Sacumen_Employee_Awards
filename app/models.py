@@ -4,6 +4,8 @@ from sqlalchemy.orm import relationship
 from sqlalchemy import Enum as SQLEnum
 from .db import Base
 from enum import Enum
+from datetime import datetime
+
 
 
 # Only one Enum needed
@@ -65,15 +67,26 @@ class Nomination(Base):
 class SentimentResult(Base):
     __tablename__ = "sentiment_results"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    nomination_id = Column(Integer, ForeignKey("nominations.id"))
-    employee_id = Column(String(20), ForeignKey("employees.id"))
-    manager_id = Column(Integer, ForeignKey("users.id"))
-    sentiment_label = Column(String(20))
-    sentiment_score = Column(Float)
-    predicted_core_value = Column(String(50))
-    core_value_alignment = Column(Integer)
-    analyzed_at = Column(DateTime(timezone=True), server_default=func.now())
+    nomination_id = Column(Integer, primary_key=True, index=True)
+
+    # Existing relationships
+    employee_id = Column(String(20), nullable=False)
+    manager_id = Column(Integer, nullable=False)
+
+    # New details
+    employee_name = Column(String(100), nullable=False)
+    manager_name = Column(String(100), nullable=False)
+    project_name = Column(String(100), nullable=True)
+    nomination_type = Column(String(20), nullable=True)  # monthly, quarterly, yearly etc.
+
+    # Sentiment analysis fields
+    sentiment_label = Column(String(20), nullable=True)  # e.g., Positive, Negative
+    sentiment_score = Column(Float, nullable=True)
+    predicted_core_value = Column(String(50), nullable=True)
+    core_value_alignment = Column(Integer, nullable=True)  # alignment score
+
+    # Metadata
+    analyzed_at = Column(DateTime, default=datetime.utcnow)
 
 
 class PasswordReset(Base):

@@ -7,11 +7,10 @@ from app.db_seed import seed_superadmin
 from app.seed_emp import seed_employees
 from fastapi.middleware.cors import CORSMiddleware
 from app.routes import project_routes, employee_routes, manager_routes, nomination_routes, report_routes, prometheus_routes
+from app.routes import ai_routes
 
+app = FastAPI(title="Auth Service", redirect_slashes=True)
 
-
-
-app = FastAPI(title="Auth Service")
 
 
 
@@ -47,5 +46,4 @@ def health_check():
 def startup_event():
     seed_superadmin()
     seed_employees()
-    
 

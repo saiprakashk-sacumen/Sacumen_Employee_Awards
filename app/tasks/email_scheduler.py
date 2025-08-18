@@ -9,8 +9,9 @@ import os
 
 # ----------------- Email function -----------------
 def send_email(subject: str, body: str, recipients: list[str]):
-    sender_email = os.getenv("EMAIL_USER")
-    sender_password = os.getenv("EMAIL_PASS")
+    sender_email = "prasanna.sekar@gmail.com"
+    sender_password = "your-app-password"
+
 
     msg = MIMEText(body)
     msg["Subject"] = subject
@@ -23,7 +24,7 @@ def send_email(subject: str, body: str, recipients: list[str]):
 
 # ----------------- DB Helper -----------------
 def get_managers(session: Session):
-    return session.query(User).filter(User.role == "manager", User.is_approved==True).all()
+    return session.query(User).filter(User.role == "manager", User.is_approved == True).all()
 
 # ----------------- Nomination Email Jobs -----------------
 def send_nomination_email(subject: str, body: str):
@@ -39,25 +40,21 @@ def send_nomination_email(subject: str, body: str):
     finally:
         session.close()
 
-# Monthly
 def monthly_nomination_reminder():
     subject = "Reminder: Monthly Nomination Process"
     body = "Hello Managers,\n\nReminder to submit nominations before 25th of this month.\n\nHR Department"
     send_nomination_email(subject, body)
 
-# Quarterly
 def quarterly_nomination_reminder():
     subject = "Reminder: Quarterly Nomination Process"
     body = "Hello Managers,\n\nReminder to submit nominations for this quarter before 25th.\n\nHR Department"
     send_nomination_email(subject, body)
 
-# Yearly
 def yearly_nomination_reminder():
     subject = "Reminder: Yearly Nomination Process"
     body = "Hello Managers,\n\nReminder to submit nominations for this year before 25th December.\n\nHR Department"
     send_nomination_email(subject, body)
 
-# ----------------- Test Email Job (every 5 min) -----------------
 def test_email_job():
     subject = "Test Email from Nomination Scheduler"
     body = "Hello Prasanna,\n\nThis is a test email sent every 5 minutes.\n\nIgnore this email."
@@ -67,17 +64,10 @@ def test_email_job():
 # ----------------- Scheduler -----------------
 scheduler = BackgroundScheduler()
 
-# Monthly: 25th of every month
-scheduler.add_job(monthly_nomination_reminder, "cron", day=25, hour=9, minute=0)
-
-# Quarterly: 25th of quarter-end months (Mar, Jun, Sep, Dec)
-scheduler.add_job(quarterly_nomination_reminder, "cron", month="3,6,9,12", day=25, hour=10, minute=0)
-
-# Yearly: 25th December
-scheduler.add_job(yearly_nomination_reminder, "cron", month=12, day=25, hour=11, minute=0)
-
-# Test: every 5 minutes
-scheduler.add_job(test_email_job, "interval", minutes=5)
-
-scheduler.start()
-print("✅ Email Scheduler started...")
+def start_scheduler():
+    scheduler.add_job(monthly_nomination_reminder, "cron", day=25, hour=9, minute=0)
+    scheduler.add_job(quarterly_nomination_reminder, "cron", month="3,6,9,12", day=25, hour=10, minute=0)
+    scheduler.add_job(yearly_nomination_reminder, "cron", month=12, day=25, hour=11, minute=0)
+    scheduler.add_job(test_email_job, "interval", minutes=5)
+    scheduler.start()
+    print("✅ Email Scheduler started...")
