@@ -238,3 +238,30 @@ def download_report(format: str = Query("csv", enum=["csv", "pdf"])):
 @app.get("/metrics")
 def metrics():
     return {"uptime": "100%", "requests": len(nominations)}
+
+# -------------------------------------------------
+# Count APIs
+# -------------------------------------------------
+@app.get("/count/employees")
+def count_employees():
+    """Get total number of employees"""
+    try:
+        count = len(employees)
+        logger.info(f"Total employees count requested: {count}")
+        return {"total_employees": count}
+    except Exception as e:
+        logger.error(f"Error fetching employees count: {e}")
+        raise HTTPException(status_code=500, detail="Error fetching employees count")
+
+
+@app.get("/count/managers")
+def count_managers():
+    """Get total number of managers"""
+    try:
+        count = len(managers)
+        logger.info(f"Total managers count requested: {count}")
+        return {"total_managers": count}
+    except Exception as e:
+        logger.error(f"Error fetching managers count: {e}")
+        raise HTTPException(status_code=500, detail="Error fetching managers count")
+
