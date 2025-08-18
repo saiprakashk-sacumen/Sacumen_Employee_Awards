@@ -11,7 +11,27 @@ from app.routes import project_routes, employee_routes, manager_routes, nominati
 
 
 
-app = FastAPI(title="Auth Service")
+from app.routes import project_routes, employee_routes, manager_routes, nomination_routes, report_routes, prometheus_routes
+from app.routes import ai_routes
+
+
+app = FastAPI(title="Auth Service", redirect_slashes=True)
+
+
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # <-- This allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+
+# Create all tables in the database (for dev / first run)
+Base.metadata.create_all(bind=engine)
 
 
 
@@ -40,6 +60,14 @@ Base.metadata.create_all(bind=engine)
 
 # Include auth router
 app.include_router(auth.router)
+app.include_router(ai_routes.router)
+app.include_router(manager_routes.router)
+app.include_router(project_routes.router)
+app.include_router(employee_routes.router)
+app.include_router(nomination_routes.router)
+app.include_router(report_routes.router)
+app.include_router(prometheus_routes.router)
+
 
 app.include_router(ai_routes.router)
 
@@ -57,5 +85,4 @@ def health_check():
 def startup_event():
     seed_superadmin()
     seed_employees()
-    
 

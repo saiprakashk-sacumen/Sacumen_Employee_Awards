@@ -1,7 +1,10 @@
 global:
   scrape_interval: 15s
+  evaluation_interval: 15s
 
 scrape_configs:
-  - job_name: 'prometheus'
+  - job_name: 'employee_awards_api'
+    metrics_path: /metrics
     static_configs:
-      - targets: ['localhost:9090']
+      - targets: ['sacumen_employee_awards-api:8000']  # your FastAPI container
+  
