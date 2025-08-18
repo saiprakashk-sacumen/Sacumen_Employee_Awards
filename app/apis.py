@@ -73,6 +73,13 @@ def create_manager(manager: Manager):
 def list_managers():
     return managers
 
+@app.get("/managers/{manager_id}/employees")
+def get_manager_employees(manager_id: str):
+    manager = next((m for m in managers if m.id == manager_id), None)
+    if not manager:
+        raise HTTPException(status_code=404, detail="Manager not found")
+    return [emp for emp in employees if emp.id in manager.team_member_ids]
+
 # -------------------------------------------------
 # Employees
 # -------------------------------------------------
@@ -92,8 +99,32 @@ def list_employees(manager_id: Optional[str] = None):
         return [emp for emp in employees if emp.id in manager.team_member_ids]
     return employees
 
+@app.get("/employees/{employee_id}")
+def get_employee(employee_id: str):
+    employee = next((e for e in employees if e.id == employee_id), None)
+    if not employee:
+        raise HTTPException(status_code=404, detail="Employee not found")
+    return employee
+
 # -------------------------------------------------
-# Nomination Form APIs
+# Projects (derived from Managers)
+# -------------------------------------------------
+@app.get("/projects")
+def list_projects():
+    """List all projects based on managers' projects."""
+    projects = [{"id": m.id, "name": m.project} for m in managers]
+    return projects
+
+@app.get("/projects/{project_id}/employees")
+def list_project_employees(project_id: str):
+    """Get employees under a project (via manager)."""
+    manager = next((m for m in managers if m.id == project_id), None)
+    if not manager:
+        raise HTTPException(status_code=404, detail="Project/Manager not found")
+    return [emp for emp in employees if emp.id in manager.team_member_ids]
+
+# -------------------------------------------------
+# Nominations
 # -------------------------------------------------
 @app.post("/nominations")
 def submit_nomination(nomination: Nomination):
@@ -114,20 +145,35 @@ def get_nomination_form_template():
         "nominee_id": ""
     }
 
-@app.patch("/nominations/{id}")
-def update_nomination(id: str, updates: dict):
+@app.get("/nominations/{nomination_id}")
+def get_nomination(nomination_id: str):
+    nomination = next((n for n in nominations if n.id == nomination_id), None)
+    if not nomination:
+        raise HTTPException(status_code=404, detail="Nomination not found")
+    return nomination
+
+@app.patch("/nominations/{nomination_id}")
+def update_nomination(nomination_id: str, updates: dict):
     for nom in nominations:
-        if nom.id == id:
+        if nom.id == nomination_id:
             for key, value in updates.items():
                 setattr(nom, key, value)
-            logger.info(f"Nomination {id} updated")
+            logger.info(f"Nomination {nomination_id} updated")
             return {"message": "Nomination updated successfully"}
-    logger.warning(f"Nomination {id} not found")
+    logger.warning(f"Nomination {nomination_id} not found")
     raise HTTPException(status_code=404, detail="Nomination not found")
 
-# -------------------------------------------------
-# Nomination Listing
-# -------------------------------------------------
+@app.put("/nominations/{nomination_id}")
+def replace_nomination(nomination_id: str, nomination: Nomination):
+    for i, n in enumerate(nominations):
+        if n.id == nomination_id:
+            nomination.id = nomination_id
+            nomination.created_at = n.created_at or datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+            nominations[i] = nomination
+            logger.info(f"Nomination {nomination_id} replaced")
+            return {"message": "Nomination replaced successfully"}
+    raise HTTPException(status_code=404, detail="Nomination not found")
+
 @app.get("/nominations", response_model=List[Nomination])
 def list_nominations(
     search: Optional[str] = None,
