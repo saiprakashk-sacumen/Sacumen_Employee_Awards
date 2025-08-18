@@ -3,7 +3,8 @@ from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel
 from typing import List, Optional
 from uuid import uuid4
-from datetime import datetime
+from datetime import datetime, timedelta
+import calendar
 
 # -------------------------------------------------
 # Logging Setup
@@ -211,14 +212,53 @@ def winners_yearly():
     return [n for n in nominations if n.is_winner and "yearly" in n.project_name.lower()]
 
 # -------------------------------------------------
-# Trends
+# Trends (Monthly, Quarterly, Yearly)
 # -------------------------------------------------
 @app.get("/nominations/trends")
 def get_trends():
+    now = datetime.utcnow()
+
+    # --- Monthly ---
+    curr_month = [n for n in nominations if n.created_at and datetime.strptime(n.created_at, "%Y-%m-%d %H:%M:%S").month == now.month and datetime.strptime(n.created_at, "%Y-%m-%d %H:%M:%S").year == now.year]
+    prev_month_date = (now.replace(day=1) - timedelta(days=1))
+    prev_month = [n for n in nominations if n.created_at and datetime.strptime(n.created_at, "%Y-%m-%d %H:%M:%S").month == prev_month_date.month and datetime.strptime(n.created_at, "%Y-%m-%d %H:%M:%S").year == prev_month_date.year]
+
+    monthly_change = ((len(curr_month) - len(prev_month)) / len(prev_month) * 100) if prev_month else None
+
+    # --- Quarterly ---
+    curr_quarter = (now.month - 1) // 3 + 1
+    prev_quarter = curr_quarter - 1 if curr_quarter > 1 else 4
+    prev_quarter_year = now.year if curr_quarter > 1 else now.year - 1
+
+    curr_quarter_noms = [n for n in nominations if n.created_at and ((datetime.strptime(n.created_at, "%Y-%m-%d %H:%M:%S").month - 1) // 3 + 1) == curr_quarter and datetime.strptime(n.created_at, "%Y-%m-%d %H:%M:%S").year == now.year]
+    prev_quarter_noms = [n for n in nominations if n.created_at and ((datetime.strptime(n.created_at, "%Y-%m-%d %H:%M:%S").month - 1) // 3 + 1) == prev_quarter and datetime.strptime(n.created_at, "%Y-%m-%d %H:%M:%S").year == prev_quarter_year]
+
+    quarterly_change = ((len(curr_quarter_noms) - len(prev_quarter_noms)) / len(prev_quarter_noms) * 100) if prev_quarter_noms else None
+
+    # --- Yearly ---
+    curr_year_noms = [n for n in nominations if n.created_at and datetime.strptime(n.created_at, "%Y-%m-%d %H:%M:%S").year == now.year]
+    prev_year_noms = [n for n in nominations if n.created_at and datetime.strptime(n.created_at, "%Y-%m-%d %H:%M:%S").year == now.year - 1]
+
+    yearly_change = ((len(curr_year_noms) - len(prev_year_noms)) / len(prev_year_noms) * 100) if prev_year_noms else None
+
+    logger.info("Calculated trends successfully")
+
     return {
-        "month_change": "+12%",
-        "quarter_change": "-5%",
-        "year_change": "+30%"
+        "monthly": {
+            "current_count": len(curr_month),
+            "previous_count": len(prev_month),
+            "change_percent": f"{monthly_change:.2f}%" if monthly_change is not None else "N/A"
+        },
+        "quarterly": {
+            "current_count": len(curr_quarter_noms),
+            "previous_count": len(prev_quarter_noms),
+            "change_percent": f"{quarterly_change:.2f}%" if quarterly_change is not None else "N/A"
+        },
+        "yearly": {
+            "current_count": len(curr_year_noms),
+            "previous_count": len(prev_year_noms),
+            "change_percent": f"{yearly_change:.2f}%" if yearly_change is not None else "N/A"
+        }
     }
 
 # -------------------------------------------------
@@ -253,7 +293,6 @@ def count_employees():
         logger.error(f"Error fetching employees count: {e}")
         raise HTTPException(status_code=500, detail="Error fetching employees count")
 
-
 @app.get("/count/managers")
 def count_managers():
     """Get total number of managers"""
@@ -264,4 +303,3 @@ def count_managers():
     except Exception as e:
         logger.error(f"Error fetching managers count: {e}")
         raise HTTPException(status_code=500, detail="Error fetching managers count")
-
