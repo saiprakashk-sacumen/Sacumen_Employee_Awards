@@ -3,9 +3,13 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from jose import JWTError, jwt
 from app.db import SessionLocal
+
+from app.models import User
+
 from app.models import User, Employee
 from pydantic import BaseModel
 from datetime import datetime
+
 
 # ---- Router ----
 router = APIRouter(prefix="/managers", tags=["Managers"])
@@ -42,6 +46,11 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     if not user:
         raise credentials_exception
     return user
+
+
+# ---- List all managers (optionally filter approved) ----
+@router.get("/")
+def list_managers(approved: bool = None, db: Session = Depends(get_db)):
 
 
 # ---- Pydantic Response Model ----
@@ -88,6 +97,7 @@ def list_managers(
             detail="Not authorized to list managers"
         )
 
+
     query = db.query(User).filter(User.role == "manager")
     if approved is not None:
         query = query.filter(User.is_approved == approved)
@@ -95,11 +105,16 @@ def list_managers(
 
 # ---- Approve a manager (super admin only) ----
 @router.patch("/{manager_id}/approve")
+
+def approve_manager(manager_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    # Only super admin can approve
+
 def approve_manager(
     manager_id: int,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+
     if current_user.role != "superadmin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -110,8 +125,16 @@ def approve_manager(
     if not manager:
         raise HTTPException(status_code=404, detail="Manager not found")
 
+<<<<<<< HEAD
+    # Check if already approved
     if manager.is_approved:
         return {"message": "Manager is already approved", "manager_id": manager.id}
+
+    # Approve manager
+
+    if manager.is_approved:
+        return {"message": "Manager is already approved", "manager_id": manager.id}
+
 
     manager.is_approved = True
     db.commit()
@@ -125,6 +148,14 @@ def approve_manager(
         "role": manager.role,
         "is_approved": manager.is_approved
     }
+
+# ---- Get employees of a manager ----
+@router.get("/{manager_id}/employees")
+def get_manager_employees(manager_id: int, db: Session = Depends(get_db)):
+    manager = db.query(User).filter(User.id == manager_id, User.role == "manager").first()
+    if not manager:
+        raise HTTPException(status_code=404, detail="Manager not found")
+    return [employee for employee in manager.employees]  # assumes relationship set up in User model
 
 # ---- Get employees of a manager ----flat list of all employees under a manager.
 @router.get("/{manager_id}/employees")
@@ -173,3 +204,4 @@ def get_manager_projects(manager_id: int, current_user: User = Depends(get_curre
         "manager_name": manager.name,
         "projects": result
     }
+
