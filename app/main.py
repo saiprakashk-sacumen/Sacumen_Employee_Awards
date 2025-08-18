@@ -15,22 +15,12 @@ app = FastAPI(title="Auth Service")
 
 
 
-# ----------------- CORS Setup -----------------
-origins = [
-    "http://localhost:5173",
-    "http://localhost:3000",
-    "http://127.0.0.1:5173",
-    "http://127.0.0.1:3000",
-    "http://localhost:8000",               # API URL exposed by Docker
-    "https://your-frontend-domain.com"    # Production frontend
-]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],  # <-- This allows all origins
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"]
+    allow_headers=["*"],
 )
 
 
