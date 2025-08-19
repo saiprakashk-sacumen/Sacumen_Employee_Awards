@@ -2,8 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.db import get_db
 from app.models import Employee
-from typing import List, Dict
-from fastapi import Query
+
 
 router = APIRouter(prefix="/employees", tags=["Employees"])
 

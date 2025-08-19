@@ -8,6 +8,7 @@ from app.seed_emp import seed_employees
 from fastapi.middleware.cors import CORSMiddleware
 from app.routes import project_routes, employee_routes, manager_routes, nomination_routes, report_routes, prometheus_routes
 from app.routes import ai_routes
+from app.jira_metrics import start_metrics_loop
 
 
 app = FastAPI(title="Auth Service", redirect_slashes=True)
@@ -32,6 +33,8 @@ app.include_router(employee_routes.router)
 app.include_router(nomination_routes.router)
 app.include_router(report_routes.router)
 app.include_router(prometheus_routes.router)
+app.include_router(report_routes.dashboard_router)
+
 
 @app.get("/healthz")
 def health_check():
@@ -41,5 +44,8 @@ def health_check():
 def startup_event():
     seed_superadmin()
     seed_employees()
+
+     # Start Jira metrics collection in the background
+    start_metrics_loop(interval_seconds=30, port=2112)
 
 

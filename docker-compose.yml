@@ -7,12 +7,12 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql+psycopg2://postgres:postgres@db/awards
-      - JWT_SECRET=devsecret
-      - JIRA_EMAIL=myidprasannas@gmail.com
-      - JIRA_API_TOKEN=ATATT3xFfGF0qFr3O85a1dL3Yb3dKSK_HufpnIuKt4G-J5Bd6aqoCOdZuuozqSakrC3O6QeevvI4umLsr9Igt9RHQAeAmChMBeVCTAMmcdghfcIBJaw_swBUNP7eQJDe-d4xUVb3vEZSXl0ujICyFei9pDlgCCW85bvaJCF94z4Ru87N1d98lqI=FDFC3BF3
-      - JIRA_DOMAIN=harshal782002.atlassian.net
-      - PROJECT_KEY=SCRUM
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - JIRA_EMAIL=${JIRA_EMAIL}
+      - JIRA_API_TOKEN=${JIRA_API_TOKEN}
+      - JIRA_DOMAIN=${JIRA_DOMAIN}
+      - PROJECT_KEY=${PROJECT_KEY}
     depends_on:
       - db
 
@@ -31,6 +31,7 @@ services:
     image: prom/prometheus:latest
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus 
     ports:
       - "9091:9090"
     depends_on:
@@ -38,3 +39,4 @@ services:
 
 volumes:
   pgdata:
+  prometheus_data: 

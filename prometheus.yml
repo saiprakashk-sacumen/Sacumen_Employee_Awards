@@ -6,5 +6,5 @@ scrape_configs:
   - job_name: 'employee_awards_api'
     metrics_path: /metrics
     static_configs:
-      - targets: ['sacumen_employee_awards-api:8000']  # your FastAPI container
+      - targets: ['api:8000']  # your FastAPI container
   
