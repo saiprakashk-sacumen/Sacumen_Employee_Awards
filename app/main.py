@@ -16,7 +16,7 @@ app = FastAPI(title="Auth Service", redirect_slashes=True)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # <-- This allows all origins
-    allow_credentials=False,
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
