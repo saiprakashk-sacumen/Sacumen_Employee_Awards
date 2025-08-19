@@ -16,7 +16,7 @@ app = FastAPI(title="Auth Service", redirect_slashes=True)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # <-- This allows all origins
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -32,8 +32,9 @@ app.include_router(project_routes.router)
 app.include_router(employee_routes.router)
 app.include_router(nomination_routes.router)
 app.include_router(report_routes.router)
-app.include_router(prometheus_routes.router)
 app.include_router(report_routes.dashboard_router)
+app.include_router(prometheus_routes.router)
+
 
 
 @app.get("/healthz")
