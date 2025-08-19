@@ -1,0 +1,92 @@
+pipeline {
+    agent { label 'backendnode' }
+    tools {
+        jdk 'jdk17'
+        dockerTool 'docker'
+    }
+    parameters {
+        string(name: 'BRANCH_NAME', defaultValue: 'dev', description: 'Branch to checkout')
+    }
+
+    environment {
+        COMPOSE_FILE = 'docker-compose.yml'
+    }
+    
+
+    stages {
+        stage('Inject Env File') {
+            steps {
+                withCredentials([file(credentialsId: 'my_env_file', variable: 'ENVFILE')]) {
+                    sh '''
+                      echo "Copying .env file from Jenkins credentials"
+                      cp $ENVFILE .env
+
+                    '''
+                }
+            }
+        }
+
+        stage('Clean Up Existing Containers') {
+            steps {
+                script {
+                    echo "Stopping and removing any running containers from previous builds..."
+                    sh 'docker compose down --volumes --remove-orphans || true'
+                }
+            }
+        }
+
+        stage('Checkout') {
+            steps {
+                checkout([
+                    $class: 'GitSCM',
+                    branches: [[name: "refs/heads/${params.BRANCH_NAME}"]],
+                    userRemoteConfigs: [[url: 'https://github.com/saiprakashk-sacumen/Sacumen_Employee_Awards.git']]
+                ])
+            }
+        }
+
+        stage('Build Docker Images') {
+            steps {
+                echo "Building Docker images defined in docker-compose.yml..."
+                sh 'docker compose build'
+            }
+        }
+
+        stage('Start Services') {
+            steps {
+                echo "Starting all services in detached mode..."
+                sh 'docker compose up -d'
+            }
+        }
+
+        stage('Health Check') {
+            steps {
+                script {
+                    echo "Waiting for API service to become healthy..."
+                    sleep 10
+                    sh 'curl -f http://localhost:8000/docs || echo "API not ready yet"'
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "Pipeline completed. Containers are still running."
+            slackSend (
+                channel: '#jenkins-build-status',
+                color: 'good',
+                message: "Pipeline SUCCESS: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BRANCH_NAME}) completed successfully! :tada:"
+            )
+        }
+
+        failure {
+            echo "Pipeline failed. Leaving containers running for debugging."
+            slackSend (
+                channel: '#jenkins-build-status',
+                color: 'danger',
+                message: "Pipeline FAILURE: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BRANCH_NAME}) failed. Please check the logs."
+            )
+        }
+    }
+}
