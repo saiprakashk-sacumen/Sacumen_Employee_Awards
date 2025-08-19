@@ -7,6 +7,9 @@ from passlib.context import CryptContext
 from datetime import datetime, timedelta
 from jose import jwt
 from pydantic import BaseModel
+from fastapi import HTTPException
+
+
 SECRET_KEY = "your-secret-key"  # store in env variable
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
@@ -57,14 +60,19 @@ def create_access_token(data: dict, expires_delta: timedelta = None):
 @router.post("/signin", response_model=AuthResponse)
 def signin(payload: AuthRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == payload.username).first()
+    
     if not user or not verify_password(payload.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid credentials")
-
+    
+    # Manager approval check
+    if user.role == "manager" and not user.is_approved:
+        raise HTTPException(status_code=403, detail="Manager not approved yet")
+    
+    # Super admin or approved user: return token
     token_data = {"sub": user.email, "role": user.role}
     token = create_access_token(token_data)
+    
     return {"access_token": token, "token_type": "bearer", "role": user.role}
-
-
 
 # ---- Password Utils ----
 def get_password_hash(password: str) -> str:

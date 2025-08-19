@@ -5,7 +5,7 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
-from app.models import SentimentResult, Employee, User
+from app.models import SentimentResult, Employee, User, Nomination
 from app.db import get_db
 
 # ----- CONFIG -----
@@ -114,3 +114,68 @@ def list_sentiment_results(
         ))
 
     return result
+
+
+
+from sqlalchemy.orm import Session
+from sqlalchemy import func
+
+def get_best_employees(manager_id: int, db: Session):
+    # Join Nomination + SentimentResult
+    results = (
+        db.query(
+            Employee.id.label("employee_id"),
+            Employee.name.label("employee_name"),
+            func.avg(Nomination.rating).label("avg_rating"),
+            func.avg(SentimentResult.sentiment_score).label("avg_sentiment"),
+            func.avg(SentimentResult.core_value_alignment).label("avg_alignment")
+        )
+        .join(Nomination, Nomination.nominee_id == Employee.id)
+        .join(SentimentResult, SentimentResult.nomination_id == Nomination.id)
+        .filter(Employee.manager_id == manager_id)
+        .group_by(Employee.id)
+        .all()
+    )
+
+    # Compute weighted score
+    scored_employees = []
+    for r in results:
+        avg_rating = float(r.avg_rating) if r.avg_rating is not None else 0
+        avg_sentiment = float(r.avg_sentiment) if r.avg_sentiment is not None else 0
+        avg_alignment = float(r.avg_alignment) if r.avg_alignment is not None else 0
+
+        total_score = (avg_rating / 5 * 0.4) + (avg_sentiment * 0.3) + (avg_alignment / 100 * 0.3)
+
+        scored_employees.append({
+            "employee_id": r.employee_id,
+            "employee_name": r.employee_name,
+            "score": total_score
+        })
+
+
+    # Sort by score descending
+    scored_employees.sort(key=lambda x: x["score"], reverse=True)
+
+    # Add rank
+    for i, emp in enumerate(scored_employees, start=1):
+        emp["rank"] = i
+
+    return scored_employees
+
+
+# ---- Route: Best Employees (superadmin only) ----
+@router.get("/superadmin/best_employees")
+def best_employees_superadmin(
+    manager_id: Optional[int] = None,   # filter by specific manager if needed
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    # Only superadmin allowed
+    if current_user.role != "superadmin":
+        raise HTTPException(status_code=403, detail="Not authorized. Only superadmin can access this.")
+
+    if manager_id is None:
+        raise HTTPException(status_code=400, detail="manager_id query param required")
+
+    top_employees = get_best_employees(manager_id, db)
+    return {"manager_id": manager_id, "top_employees": top_employees}

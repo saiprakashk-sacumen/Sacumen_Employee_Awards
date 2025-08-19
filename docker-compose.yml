@@ -9,6 +9,10 @@ services:
     environment:
       - DATABASE_URL=postgresql+psycopg2://postgres:postgres@db/awards
       - JWT_SECRET=devsecret
+      - JIRA_EMAIL=myidprasannas@gmail.com
+      - JIRA_API_TOKEN=ATATT3xFfGF0qFr3O85a1dL3Yb3dKSK_HufpnIuKt4G-J5Bd6aqoCOdZuuozqSakrC3O6QeevvI4umLsr9Igt9RHQAeAmChMBeVCTAMmcdghfcIBJaw_swBUNP7eQJDe-d4xUVb3vEZSXl0ujICyFei9pDlgCCW85bvaJCF94z4Ru87N1d98lqI=FDFC3BF3
+      - JIRA_DOMAIN=harshal782002.atlassian.net
+      - PROJECT_KEY=SCRUM
     depends_on:
       - db
 

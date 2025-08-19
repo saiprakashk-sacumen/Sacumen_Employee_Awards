@@ -9,10 +9,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.routes import project_routes, employee_routes, manager_routes, nomination_routes, report_routes, prometheus_routes
 from app.routes import ai_routes
 
+
 app = FastAPI(title="Auth Service", redirect_slashes=True)
-
-
-
 
 app.add_middleware(
     CORSMiddleware,
@@ -21,8 +19,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
 
 # Create all tables in the database (for dev / first run)
 Base.metadata.create_all(bind=engine)
@@ -37,7 +33,6 @@ app.include_router(nomination_routes.router)
 app.include_router(report_routes.router)
 app.include_router(prometheus_routes.router)
 
-
 @app.get("/healthz")
 def health_check():
     return {"status": "ok"}
@@ -46,4 +41,5 @@ def health_check():
 def startup_event():
     seed_superadmin()
     seed_employees()
+
 

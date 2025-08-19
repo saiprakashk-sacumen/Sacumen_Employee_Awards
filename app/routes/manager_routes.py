@@ -6,6 +6,9 @@ from app.db import SessionLocal
 from app.models import User, Employee
 from pydantic import BaseModel
 from datetime import datetime
+from typing import List, Dict
+from fastapi import Query
+
 
 # ---- Router ----
 router = APIRouter(prefix="/managers", tags=["Managers"])
@@ -55,6 +58,34 @@ class ManagerResponse(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+
+@router.get("/approved")
+def get_approved_managers(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    # Only superadmin
+    if current_user.role != "superadmin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    # filter only approved managers
+    managers = db.query(User).filter(User.role == "manager", User.is_approved == True).all()
+
+    response: List[Dict] = []
+    for m in managers:
+        projects_list = [p[0] for p in db.query(Employee.project).filter(Employee.manager_id == m.id).distinct().all()]
+        projects_str = ", ".join(projects_list)  # convert list to comma-separated string
+        total_employees = db.query(Employee).filter(Employee.manager_id == m.id).count()
+        response.append({
+            "manager_id": m.id,
+            "manager_name": m.name,
+            "email": m.email,
+            "is_approved": m.is_approved,
+            "projects": projects_str,
+            "total_employees": total_employees
+        })
+
+    return response
+
 
 @router.get("/{manager_id}", response_model=ManagerResponse)
 def get_manager(
@@ -173,3 +204,6 @@ def get_manager_projects(manager_id: int, current_user: User = Depends(get_curre
         "manager_name": manager.name,
         "projects": result
     }
+
+
+
