@@ -10,7 +10,7 @@ This is a FastAPI backend service for managing employee awards, with:
 ## Run Locally
 
 ```bash
-docker-compose up --build
+docker compose up --build
 
 ## Recommended sequence for your case
 
