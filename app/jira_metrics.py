@@ -74,40 +74,6 @@ def fetch_jira_data():
     except Exception as e:
         print("Error fetching Jira data:", e)
 
-# def fetch_jira_data():
-#     """Fetch Jira issues and update Prometheus metrics"""
-#     if not JIRA_EMAIL or not JIRA_API_TOKEN:
-#         print("Jira credentials not set!")
-#         return
-
-#     auth = (JIRA_EMAIL, JIRA_API_TOKEN)
-#     headers = {"Accept": "application/json"}
-
-#     try:
-#         response = requests.get(JIRA_SEARCH_URL, headers=headers, auth=auth, timeout=10)
-#         response.raise_for_status()
-#         data = response.json()
-
-#         completed = 0
-#         total_hours = 0.0
-
-#         for issue in data.get("issues", []):
-#             fields = issue["fields"]
-#             status = fields["status"]["name"]
-#             if status.lower() == "done":
-#                 completed += 1
-
-#             worklogs = fields.get("worklog", {}).get("worklogs", [])
-#             for w in worklogs:
-#                 time_spent_sec = w.get("timeSpentSeconds", 0)
-#                 total_hours += time_spent_sec / 3600
-
-#         # Update Prometheus metrics
-#         tickets_completed.set(completed)
-#         hours_logged.set(total_hours)
-
-#     except Exception as e:
-#         print("Error fetching Jira data:", e)
 
 
 def start_metrics_loop(interval_seconds=30, port=8000):
@@ -124,3 +90,6 @@ def start_metrics_loop(interval_seconds=30, port=8000):
     import threading
     thread = threading.Thread(target=loop, daemon=True)
     thread.start()
+
+
+

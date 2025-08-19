@@ -13,6 +13,7 @@ services:
       - JIRA_API_TOKEN=${JIRA_API_TOKEN}
       - JIRA_DOMAIN=${JIRA_DOMAIN}
       - PROJECT_KEY=${PROJECT_KEY}
+      - SLACK_BOT_TOKEN=${SLACK_BOT_TOKEN}
     depends_on:
       - db
 

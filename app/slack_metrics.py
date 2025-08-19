@@ -6,7 +6,7 @@ from prometheus_client import Gauge
 
 
 
-SLACK_BOT_TOKEN = os.environ.get("SLACK_BOT_TOKEN")
+SLACK_BOT_TOKEN = os.getenv("SLACK_BOT_TOKEN")
 CHANNELS = ["C09AJPQAYCT"]  # Add more if needed
 
 START_DATE = datetime(2025, 8, 1)
